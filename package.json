@@ -1,6 +1,6 @@
 {
   "name": "huaweicloud-grow-assistant",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "华为云开发者成长中心（Grow Center）零成本全自动积分收割、微认证应试辅助与云端实践管家",
   "main": "src/daily/daily_runner.js",
   "type": "commonjs",
@@ -19,9 +19,8 @@
     "weekly:issue": "node src/weekly/agent_issue.js",
     "weekly:star": "node src/weekly/agent_star.js",
     "weekly:event": "node src/weekly/event_signup.js",
-    "weekly:competition": "node src/weekly/competition_submit.js",
+    "weekly:competition": "node src/weekly/competition_tracker.js",
     "cert:activate": "node src/certifications/activate_free_certs.js",
-    "cert:exam": "node src/certifications/exam_solver.js",
     "cert:score": "node src/certifications/score_verifier.js",
     "yunsheng": "node src/yunsheng/submit_suggestion.js"
   },
