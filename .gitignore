@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables & credentials
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+
+# Browser data & sessions
+.browser-session/
+Chrome-Automation/
+User Data/
+Default/
+Singleton*
+
+# Logs & temp files
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+
+# Screenshots & test artifacts
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+screenshots/
+
+# Archive files
+*.zip
+*.tar
+*.gz
+*.tgz
+
+# OS specific
+.DS_Store
+Thumbs.db

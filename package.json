@@ -1,0 +1,41 @@
+{
+  "name": "huaweicloud-grow-assistant",
+  "version": "1.0.0",
+  "description": "华为云开发者成长中心（Grow Center）零成本全自动积分收割、微认证应试辅助与云端实践管家",
+  "main": "src/daily/daily_runner.js",
+  "type": "commonjs",
+  "scripts": {
+    "status": "node src/monitor/grow_status.js",
+    "flow": "node src/monitor/bonus_flow.js",
+    "daily": "node src/daily/daily_runner.js",
+    "daily:signin": "node src/daily/sign_in.js",
+    "daily:case": "node src/daily/harmony_case.js",
+    "daily:star": "node src/daily/harmony_star.js",
+    "daily:devspace": "node src/daily/devspace_task.js",
+    "daily:blog": "node src/daily/blog_publisher.js",
+    "weekly": "node src/weekly/weekly_runner.js",
+    "weekly:harmony": "node src/weekly/harmony_practice.js",
+    "weekly:lab": "node src/weekly/lab_practice.js",
+    "weekly:issue": "node src/weekly/agent_issue.js",
+    "weekly:star": "node src/weekly/agent_star.js",
+    "weekly:event": "node src/weekly/event_signup.js",
+    "weekly:competition": "node src/weekly/competition_submit.js",
+    "cert:activate": "node src/certifications/activate_free_certs.js",
+    "cert:exam": "node src/certifications/exam_solver.js",
+    "cert:score": "node src/certifications/score_verifier.js",
+    "yunsheng": "node src/yunsheng/submit_suggestion.js"
+  },
+  "keywords": [
+    "huaweicloud",
+    "grow-center",
+    "automation",
+    "cdp",
+    "harmonyos",
+    "codearts"
+  ],
+  "author": "liuforge",
+  "license": "MIT",
+  "dependencies": {
+    "playwright-core": "^1.48.0"
+  }
+}

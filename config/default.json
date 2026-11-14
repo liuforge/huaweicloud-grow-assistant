@@ -1,0 +1,16 @@
+{
+  "cdpUrl": "http://127.0.0.1:9222",
+  "urls": {
+    "grow": "https://developer.huaweicloud.com/grow",
+    "harmonyCenter": "https://harmonybp.developer.huaweicloud.com/#practice-tasks",
+    "agentCenter": "https://hands-on-agent.developer.huaweicloud.com/#tasks",
+    "devspace": "https://devstation.developer.huaweicloud.com/aidevspace",
+    "blogs": "https://bbs.huaweicloud.com/blogs",
+    "yunsheng": "https://developer.huaweicloud.com/space/support/my-suggestion",
+    "certifications": "https://edu.huaweicloud.com/my/certification"
+  },
+  "defaultTimeouts": {
+    "pageWait": 3000,
+    "dwellSeconds": 35
+  }
+}
