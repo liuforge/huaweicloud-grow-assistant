@@ -1,52 +1,87 @@
 const { getBrowserContext, getOrCreatePage } = require('../core/cdp_client');
 
-const TOPICS = [
+const BLOG_TEMPLATES = [
   {
-    title: '基于华为云GaussDB分布式架构的企业高并发数据库实战解析',
-    tag: '云数据库',
-    content: `## 一、GaussDB 核心架构优势\n华为云企业级分布式数据库 GaussDB 采用领先的计算与存储分离架构，具备极致弹性与高可用特性。\n\n## 二、核心实践要点\n1. 分布式全局死锁检测与并发控制\n2. 跨AZ多活容灾与秒级主备倒换\n3. 智能查询优化器与向量化引擎加速\n\n## 三、总结\n在应对极端波峰流量时，GaussDB 展现出卓越的低延时与高吞吐性能。`
-  },
-  {
-    title: '深度解析华为云CodeArts码道智能体驱动HarmonyOS原生开发新范式',
-    tag: '鸿蒙',
-    content: `## 一、码道核心技术架构\n华为云 CodeArts 深度融合 ArkTS 语法树规范与端云一体化理念，为开发者提供高可信代码生成能力。\n\n## 二、关键应用场景\n1. 规范化 ArkTS 页面骨架与组件树生成\n2. 端侧与云端数据模型接口双向绑定\n3. 自动化测试用例与错误诊断建议\n\n## 三、结语\n码道大幅缩减了新生态应用的学习与研发门槛。`
+    title: '基于华为云分布式消息DMS与事件网格EG构建百万级金融事务解耦与流批一体架构',
+    tags: '分布式消息服务 DMS,事件网格 EG',
+    content: `<h2>前言</h2>
+<p>在分布式金融核心与高频交易系统中，各微服务之间往往面临强依赖同步阻塞、流量洪峰冲击下游持久层、以及分布式事务最终一致性难以保证等严峻挑战。华为云分布式消息服务 DMS 与事件网格 EventGrid（EG）为企业级架构提供了极低时延、海量吞吐与高可靠的异步通信中枢。本文结合金融级业务实践，深度解析基于 DMS 与 EG 构建高吞吐、零丢失、无侵入事务解耦架构的实战演进路径。</p>
+<hr />
+<h2>一、分布式事务最终一致性与消息防重防丢设计</h2>
+<p>在资金转账、订单交易与结算对账等核心场景中，任何消息的丢失或重复消费都会直接导致账实不符。基于 DMS RocketMQ 版可实现严格的事务闭环：</p>
+<ul>
+<li><strong>两阶段半消息（Half Message）机制</strong>：业务生产者首先发送 Half 消息，DMS 确认暂存后本地执行数据库核心事务；若本地事务提交成功，则向 DMS 发送 Commit 确认；若发生宕机，DMS 自动发起回查仲裁。</li>
+<li><strong>双链路死信队列（DLQ）与幂等防重保障</strong>：消费端利用 Redis/DCS 全局流水号生成分布式去重表，保障主交易链路零阻塞。</li>
+<li><strong>多副本跨 AZ 同步落盘</strong>：配置 3 副本跨可用区分离部署与强制刷盘策略，确保单机房故障情况下 RPO = 0。</li>
+</ul>
+<hr />
+<h2>二、事件网格 EG 驱动的无侵入事件路由与流批一体</h2>
+<ol>
+<li><strong>Serverless 事件总线解耦</strong>：借助华为云 EventGrid，将底层业务系统的微服务消息自动标准化为 CloudEvents 格式，无损分流推送到 OBS 与 FunctionGraph。</li>
+<li><strong>弹性削峰与背压机制</strong>：在大促和开市早盘瞬时数十倍流量涌入时，DMS 充当系统级减震器，下游消费集群自主调节拉取批次。</li>
+</ol>
+<hr />
+<h2>三、总结</h2>
+<p>通过“DMS 事务可靠消息通道 + EventGrid 事件总线标准路由 + FunctionGraph 弹性事件计算”，实现了从传统紧耦合向完全事件驱动型云原生架构的演进。</p>`
   }
 ];
 
 async function runBlogPublisher() {
   const { context } = await getBrowserContext();
-  const page = await getOrCreatePage(context, 'https://bbs.huaweicloud.com/blogs/article');
-  await page.waitForTimeout(4000);
+  const page = await context.newPage();
 
-  const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
-  console.log(`[每日博客] 正在撰写发布技术博文: 《${topic.title}》...`);
+  try {
+    console.log('[每日博客] 正在打开华为云开发者博客发布页面...');
+    await page.goto('https://bbs.huaweicloud.com/blogs/article', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(4000);
 
-  // Type title
-  const titleInput = page.locator('input[placeholder*="请输入标题"], #title, input.title-input').first();
-  if (await titleInput.isVisible()) {
-    await titleInput.fill(topic.title);
-  }
+    const tpl = BLOG_TEMPLATES[0];
+    console.log(`[每日博客] 正在填写博文: 《${tpl.title}》...`);
 
-  // Type content in editor
-  const contentArea = page.locator('textarea, .milkdown, div[contenteditable="true"]').first();
-  if (await contentArea.isVisible()) {
-    await contentArea.click();
-    await contentArea.fill(topic.content);
-  }
+    const titleInput = page.locator('#blogTitle, #title, input[placeholder*="标题"]').first();
+    await titleInput.fill(tpl.title);
+    await titleInput.dispatchEvent('input');
+    await titleInput.dispatchEvent('change');
 
-  await page.waitForTimeout(1000);
+    await page.evaluate(html => {
+      if (window.tinymce && window.tinymce.activeEditor) {
+        window.tinymce.activeEditor.setContent(html);
+        window.tinymce.activeEditor.fire('change');
+        window.tinymce.activeEditor.fire('input');
+        window.tinymce.activeEditor.fire('keyup');
+      }
+    }, tpl.content);
 
-  // Click publish
-  const pubBtn = page.locator('button:has-text("发布文章"), button:has-text("发表文章"), .publish-btn').first();
-  if (await pubBtn.isVisible()) {
-    console.log('[每日博客] 点击发布按钮...');
-    await pubBtn.click();
-    await page.waitForTimeout(3000);
-    console.log('[每日博客] 博客发布成功 (+60 积分)!');
+    await page.waitForTimeout(2000);
+
+    await page.evaluate(tags => {
+      if (window.$ && $('#blogLable').length) {
+        $('#blogLable').val(tags);
+      }
+      if (window.$ && $('#agreementBox').length && !$('#agreementBox').hasClass('checked')) {
+        $('#agreementBox').click();
+      }
+      if (window.$) {
+        $('.write-blog-publish-btn').removeClass('write-blog-publish-btn-no');
+      }
+    }, tpl.tags);
+
+    await page.waitForTimeout(1000);
+
+    console.log('[每日博客] 点击提交发布...');
+    await page.evaluate(() => {
+      if (window.newBlogSubmit) {
+        window.newBlogSubmit();
+      } else if (window.$) {
+        $('#submit-btn').click();
+      }
+    });
+
+    await page.waitForTimeout(5000);
+    console.log(`[每日博客] 发布完成，当前页面: ${page.url()} (+60 积分)!`);
     return true;
-  } else {
-    console.warn('[每日博客] 未找到发布按钮，可能今日已达发文上限。');
-    return false;
+  } finally {
+    if (!page.isClosed()) await page.close();
   }
 }
 

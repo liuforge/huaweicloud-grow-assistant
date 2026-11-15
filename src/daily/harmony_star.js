@@ -1,47 +1,61 @@
-const { getBrowserContext, getOrCreatePage } = require('../core/cdp_client');
-const config = require('../../config/default.json');
+const { getBrowserContext } = require('../core/cdp_client');
 
 async function runHarmonyStar() {
   const { context } = await getBrowserContext();
-  const page = await getOrCreatePage(context, config.urls.harmonyCenter);
-  await page.waitForTimeout(3000);
+  const page = await context.newPage();
 
-  console.log('[每日鸿蒙Star] 正在检索未 Star 的鸿蒙案例仓库...');
-  const repoLinks = [
-    'https://gitcode.com/harmony-practice-center/todo_list',
-    'https://gitcode.com/harmony-practice-center/rentandbuy',
-    'https://gitcode.com/harmony-practice-center/ecommerce',
-    'https://gitcode.com/harmony-practice-center/travel_assistant'
-  ];
+  try {
+    console.log('[每日鸿蒙Star] 正在加载 GitCode 鸿蒙实践中心官方组织...');
+    await page.goto('https://gitcode.com/harmony-practice-center', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
 
-  // Try each until one is successfully starred
-  for (const url of repoLinks) {
-    const starPage = await context.newPage();
-    try {
-      await starPage.goto(url, { waitUntil: 'domcontentloaded' });
-      await starPage.waitForTimeout(3000);
-
-      const starBtn = starPage.locator('button:has-text("Star"), .star-btn, [data-test="star-button"]').first();
-      if (await starBtn.isVisible()) {
-        const text = await starBtn.innerText();
-        if (!text.includes('Starred') && !text.includes('已Star') && !text.includes('取消Star')) {
-          console.log(`[每日鸿蒙Star] 发现未Star项目: ${url}，正在点赞...`);
-          await starBtn.click();
-          await starPage.waitForTimeout(2000);
-          console.log('[每日鸿蒙Star] 点赞成功 (+30 积分)!');
-          await starPage.close();
-          return true;
+    const repos = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a[href^="/harmony-practice-center/"]'));
+      const names = new Set();
+      links.forEach(a => {
+        const parts = a.getAttribute('href').split('/').filter(Boolean);
+        if (parts.length === 2) {
+          names.add(parts[1]);
         }
-      }
-    } catch (e) {
-      console.warn(`[每日鸿蒙Star] 检查 ${url} 失败:`, e.message);
-    } finally {
-      if (!starPage.isClosed()) await starPage.close();
-    }
-  }
+      });
+      return Array.from(names);
+    });
 
-  console.log('[每日鸿蒙Star] 今日备选仓库均已处于 Star 状态。');
-  return true;
+    console.log(`[每日鸿蒙Star] 发现案例仓库: ${repos.join(', ')}`);
+
+    let starredRepo = null;
+    for (const repo of repos) {
+      await page.goto(`https://gitcode.com/harmony-practice-center/${repo}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(2500);
+
+      const target = await page.evaluate(() => {
+        const all = Array.from(document.querySelectorAll('.status-btn.is-no-wrapper'));
+        for (const el of all) {
+          const r = el.getBoundingClientRect();
+          if (r.width > 20 && r.height > 20 && el.innerText.includes('Star')) {
+            return { x: r.x + r.width / 2, y: r.y + r.height / 2, text: el.innerText.trim(), isStarred: el.innerText.includes('Starred') };
+          }
+        }
+        return null;
+      });
+
+      if (target && !target.isStarred) {
+        console.log(`[每日鸿蒙Star] 找到未Star项目: ${repo}，正在点击 Star...`);
+        await page.mouse.click(target.x, target.y);
+        await page.waitForTimeout(3000);
+        console.log(`[每日鸿蒙Star] 项目 ${repo} 点赞成功 (+30 积分)!`);
+        starredRepo = repo;
+        break;
+      }
+    }
+
+    if (!starredRepo) {
+      console.log('[每日鸿蒙Star] 所有实践中心仓库均已被 Star。');
+    }
+    return true;
+  } finally {
+    if (!page.isClosed()) await page.close();
+  }
 }
 
 if (require.main === module) {
